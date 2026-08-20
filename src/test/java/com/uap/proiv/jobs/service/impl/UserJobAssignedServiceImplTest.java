@@ -122,6 +122,6 @@ public class UserJobAssignedServiceImplTest {
         verify(jobService, times(1)).getAllJobs();
         verify(userService, times(1)).search(1);
         verify(assignedService, times(1)).create(jobs, List.of(1, 2));
-    }
+    }   
 
 }

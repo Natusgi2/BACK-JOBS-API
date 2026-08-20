@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-JobsApplication<jobs>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.uap.proiv.jobs.JobsApplication",
+            "projectName": "jobs",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
