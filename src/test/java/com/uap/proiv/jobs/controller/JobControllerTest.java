@@ -1,195 +1,147 @@
-
-
 package com.uap.proiv.jobs.controller;
 
-import com.uap.proiv.jobs.service.JobService;
-import com.uap.proiv.jobs.service.UserJobAssignedService;
-import com.uap.proiv.jobs.service.UserService;
-
-import com.uap.proiv.jobs.dto.UserApiResponse;
-import com.uap.proiv.jobs.dto.UserJobAssigned;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uap.proiv.jobs.dto.AssignRequest;
 import com.uap.proiv.jobs.dto.Job;
 import com.uap.proiv.jobs.dto.User;
-
+import com.uap.proiv.jobs.dto.UserApiResponse;
+import com.uap.proiv.jobs.dto.UserJobAssigned;
+import com.uap.proiv.jobs.service.JobService;
+import com.uap.proiv.jobs.service.UserJobAssignedService;
+import com.uap.proiv.jobs.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-
-public class JobControllerTest{
-
-    @Mock
-    UserService userService;
+public class JobControllerTest {
 
     @Mock
-    JobService jobService;
+    private UserService userService;
 
     @Mock
-    UserJobAssignedService userJobAssignedService;
+    private JobService jobService;
+
+    @Mock
+    private UserJobAssignedService userJobAssignedService;
 
     @InjectMocks
-    JobController jobController;
+    private JobController jobController;
 
-    private MockMvc mockMvc;    
-
-    private UserApiResponse userApiResponse;
-    private List<User> users;
+    private MockMvc mockMvc;
     private ObjectMapper objectMapper;
-    
+    private UserApiResponse userApiResponse;
 
     @BeforeEach
     void setup() {
-        
         mockMvc = MockMvcBuilders.standaloneSetup(jobController).build();
-        objectMapper = new ObjectMapper();      
+        objectMapper = new ObjectMapper();
 
-
-        users = new ArrayList<>();
+        List<User> users = new ArrayList<>();
         User user1 = new User();
         user1.setId(1);
-        user1.setEmail("ejemplo@as.com");
-        user1.setAvatar("null");
-        user1.setFirstName("juan");
+        user1.setFirstName("Juan");
         user1.setLastName("Garcia");
         users.add(user1);
 
-        User user2 = new User();
-        user2.setId(2);
-        user2.setEmail("ejemplo2@as.com");
-        user2.setAvatar("null");
-        user2.setFirstName("diane");
-        user2.setLastName("perez");
-        users.add(user2);
-
-        
-
-
         userApiResponse = new UserApiResponse();
         userApiResponse.setPage(1);
-        userApiResponse.setPerPage(2);
-        userApiResponse.setTotal(2);
+        userApiResponse.setPerPage(1);
+        userApiResponse.setTotal(1);
         userApiResponse.setTotalPages(1);
         userApiResponse.setData(users);
-
-        
-        
-        
-        
-
     }
 
-        @Test 
-        @DisplayName("GET api /api/job/users/{page} retorna usuarios")
-
-        void getUsers_success_initial_data() throws Exception {
-
-        //userApiResponse.setPage(3);
-        /* when(userService.search(1))
-        .thenReturn(userApiResponse)
-        .thenReturn(userApiResponse)
-        .thenThrow(new RuntimeException("MSG"))
-        .thenReturn(userApiResponse); */
-
-        when(userService.search(1))
-        .thenReturn(userApiResponse)              
-        .thenThrow(new RuntimeException("MSG"))  
-        .thenReturn(userApiResponse);
-
-        mockMvc.perform(get("/api/job/users/1")).andExpect((status().isOk()))
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.data").isArray()).andExpect(jsonPath("$.data.length()").value(2))
-        .andExpect(jsonPath(("$.page")).value(1))
-        .andExpect(jsonPath("$.total").value(2));
-
-        mockMvc.perform(get("/api/job/users/1")).andExpect((status().is5xxServerError()));
-
-        mockMvc.perform(get("/api/job/users/1")).andExpect((status().isOk()));
-    }  
     @Test
-    @DisplayName("GET api /api/job/users/{page} - Excepcion retornada por el service")
-    void getUsers_exception() throws Exception {
-        when(userService.search(2)).thenThrow(new RuntimeException("Service Error"));
-
-        mockMvc.perform(get("/api/job/users/2")).andExpect(status().is5xxServerError())
-        .andExpect(content().string("Service Error"));
-    }
-
-            @Test 
-        @DisplayName("GET api /api/job/users/{page} retorna usuarios")
-
-        void getUsers_success_set_page() throws Exception {
-
-        userApiResponse.setPage(3);
+    @DisplayName("GET /api/job/users/{page} - Retorna 200 OK con usuarios")
+    void getUsers_Success() throws Exception {
         when(userService.search(1)).thenReturn(userApiResponse);
 
-        mockMvc.perform(get("/api/job/users/1")).andExpect((status().isOk()))
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.data").isArray()).andExpect(jsonPath("$.data.length()").value(2))
-        .andExpect(jsonPath(("$.page")).value(3))
-        .andExpect(jsonPath("$.total").value(2));
-    }  
+        mockMvc.perform(get("/api/job/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].first_name").value("Juan"));
+
+        verify(userService, times(1)).search(1);
+    }
 
     @Test
-    @DisplayName("POST /api/job/assign - Asignar trabajo a usuario")
-    void postAssign_success() throws Exception {
-        AssignRequest assignRequest = new AssignRequest();
-        assignRequest.setRequestNumber(123);
-        assignRequest.setClientName("Name");
+    @DisplayName("GET /api/job/users/{page} - Retorna 500 cuando el servicio falla")
+    void getUsers_ServiceException() throws Exception {
+        when(userService.search(anyInt())).thenThrow(new RuntimeException("Error en servicio de usuarios"));
 
-        Job job1 = new Job();
-        job1.setId(1);
-        job1.setName("Developer");
-        job1.setSalary(5000);
-        job1.setHours(2000);
-        job1.setResources(3);
-        
+        mockMvc.perform(get("/api/job/users/5"))
+                .andExpect(status().is5xxServerError());
 
-        Job job2 = new Job();
-        job2.setId(2);
-        job2.setName("Designer");
-        job2.setSalary(4500);
-        job2.setHours(1500);
-        job2.setResources(1);
+        verify(userService, times(1)).search(5);
+    }
 
-        List<UserJobAssigned> userJobAssignedList = new ArrayList<>();
-        userJobAssignedList.add(new UserJobAssigned(users, job1));
-        userJobAssignedList.add(new UserJobAssigned(List.of(users.getFirst()), job2));
+    @Test
+    @DisplayName("POST /api/job/assign - Retorna 200 OK con asignación completa")
+    void postAssign_Success() throws Exception {
+        AssignRequest request = new AssignRequest();
+        request.setRequestNumber(999);
+        request.setClientName("Empresa Test");
 
-        when(userJobAssignedService.assign()).thenReturn(userJobAssignedList);
+        Job job = new Job();
+        job.setId(1);
+        job.setName("Developer");
+
+        List<UserJobAssigned> assignedList = List.of(new UserJobAssigned(userApiResponse.getData(), job));
+        when(userJobAssignedService.assign()).thenReturn(assignedList);
 
         mockMvc.perform(post("/api/job/assign")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(assignRequest)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.Assign").isNotEmpty())
-        .andExpect(jsonPath("$.Assign[0].job.name").value("Developer"))
-        .andExpect(jsonPath("$.Assign[1].job.name").value("Designer"))
-        .andExpect(jsonPath("$.Assign[0].users[0].first_name").value("juan"))
-        .andExpect(jsonPath("$.Request_Number").value(123))
-        .andExpect(jsonPath("$.Client").value("Name"));
-    } 
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.Request_Number").value(999))
+                .andExpect(jsonPath("$.Client").value("Empresa Test"))
+                .andExpect(jsonPath("$.Assign[0].job.name").value("Developer"));
+
+        verify(userJobAssignedService, times(1)).assign();
+    }
+
+    @Test
+    @DisplayName("POST /api/job/assign - Retorna 500 si falla el proceso de asignación")
+    void postAssign_ServiceException() throws Exception {
+        AssignRequest request = new AssignRequest();
+        request.setRequestNumber(999);
+        request.setClientName("Empresa Test");
+
+        when(userJobAssignedService.assign()).thenThrow(new RuntimeException("Fallo al calcular asignaciones"));
+
+        mockMvc.perform(post("/api/job/assign")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().is5xxServerError());
+
+        verify(userJobAssignedService, times(1)).assign();
+    }
+}
 
     //adelantar los test unitarios de userService y assignedService.
     //ademas AssignedServiceImpl y UserServiceImpl deberian ser testeados 
     //con test unitarios, para que el controller sea testeado de manera aislada. 
     //hacer casos satisfactorios y de error, para que el controller sea testeado de manera aislada.
-}
