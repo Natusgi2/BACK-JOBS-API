@@ -1,0 +1,50 @@
+type Query {
+    assigneds(request: AssignRequest): [UserJobAssigned]
+    userById(id:ID): User
+    JobById(id:ID): Job # permite buscar trabajos por id desde la interfaz gráfica de graphql
+}
+type Mutation {
+    addJob(request: JobRequest): Job
+    createUser(request: UserCreateInput!): User}
+
+type UserJobAssigned {
+    users: [User]
+    job: Job
+}
+
+type User {
+    id: ID
+    firstName: String
+    lastName: String
+    email:String
+    job:Job
+
+}
+
+type Job {
+    name:String
+    salary:Float
+    hours:Float
+    id:ID
+    resources:Float
+}
+
+input AssignRequest {
+    requestNumber: Int
+    clientName: String
+}
+
+input JobRequest {
+    name: String
+    salary: Float
+    hours: Float
+    resources: Float
+}
+
+input UserCreateInput {
+    email: String!
+    first_name: String!
+    last_name: String!
+    avatar: String
+    job_id: Int!
+}

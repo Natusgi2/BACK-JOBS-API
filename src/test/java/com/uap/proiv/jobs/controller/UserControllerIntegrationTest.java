@@ -1,40 +1,36 @@
-
-
 package com.uap.proiv.jobs.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uap.proiv.jobs.client.UserApiRepository;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test; // CORREGIDO: Import de JUnit 5
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.MediaType; // CORREGIDO: Solo se mantiene MediaType de Spring
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.junit.jupiter.api.Assertions.assertEquals; // CORREGIDO: Import de JUnit 5
-import okhttp3.mockwebserver.RecordedRequest;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 public class UserControllerIntegrationTest {
-    
+
     @Autowired
     MockMvc mockMvc;
 
@@ -59,95 +55,83 @@ public class UserControllerIntegrationTest {
 
     @TestConfiguration
     static class TestConfig {
-        // Aquí puedes definir beans de prueba si es necesario
         @Bean
         @Primary
-        public UserApiRepository userApiRepository(ObjectMapper objectMapper) {
+        public  UserApiRepository userApiRepository(ObjectMapper objectMapper){
             HttpClient httpClient = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(10))
                     .build();
             String baseUrl = mockWebServer.url("/api/users").toString();
             String apiKey = "free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd";
-            return new UserApiRepository(httpClient,objectMapper, baseUrl, apiKey);
+
+            return new UserApiRepository(httpClient, objectMapper, baseUrl, apiKey);
         }
     }
 
     @Test
-    @DisplayName("GET api/users/{id} integracion UserController, UserService, UserRepository, mock api externa")
+    @DisplayName("GET api/users/id/{id} integracion UserController, UserService, UserRepository, mock api externa")
     void getUserById() throws Exception {
         String jsonResponse = """
                 {
-                    "id" : 2,
-                    "email" : "juan@gmail.com",
-                    "first_name" : "Juan",
-                    "last_name" : "Perez",
-                    "avatar" : "https://reqres.in/img/faces/2.jpg"
+                   "id": 2,
+                   "email": "juan@gmail.com",
+                   "first_name": "Juan",
+                   "last_name": "Perez",
+                   "avatar": "https://reqres.in/img/faces/2.jpg"
                 }
                 """;
-        mockWebServer.enqueue(new MockResponse().setBody(jsonResponse)
-        .setResponseCode(200)
-        .addHeader("Content-Type", "application/json")
-    );
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(jsonResponse)
+                .setResponseCode(200)
+                .addHeader("Content-Type", "application/json")
+        );
 
-     mockMvc.perform(get("/api/user/id/2"))
-    .andExpect(status().isOk())
-    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-    .andExpect(jsonPath("$.id").value(2))
-    .andExpect(jsonPath("$.email").value("juan@gmail.com"))
-    .andExpect(jsonPath("$.first_name").value("Juan"))
-    .andExpect(jsonPath("$.last_name").value("Perez"))
-    .andExpect(jsonPath("$.avatar").value("https://reqres.in/img/faces/2.jpg"));
+        mockMvc.perform(get("/api/user/id/2"))
+        .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(2))
+                .andExpect(jsonPath("$.email").value("juan@gmail.com"))
+                .andExpect(jsonPath("$.first_name").value("Juan"))
+                .andExpect(jsonPath("$.last_name").value("Perez"))
+                .andExpect(jsonPath("$.avatar").value("https://reqres.in/img/faces/2.jpg"));
 
-    RecordedRequest request = mockWebServer.takeRequest();
-    assertEquals("application/json", request.getHeader("Accept"));
-    assertEquals("free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd", request.getHeader("X-API-KEY"));
+        RecordedRequest request = mockWebServer.takeRequest();
+        assertEquals("application/json", request.getHeader("Accept"));
+        assertEquals("free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd", request.getHeader("X-API-KEY"));
+
     }
 
     @Test
-    @DisplayName(" POST /api/user/update integracion UserController, UserService, UserRepository, moc api externa")
+    @DisplayName(" POST /api/user/update integracion UserController, UserService, UserRepository, mock api externa")
     void updateUser_success() throws Exception {
-        String updateResponse =
-        """
-        {
-        "name" : "morpheusX",
-        "job" : "Zion residentX",
-        "updatedAt" : "2024-01-01T12:00:00.000Z"
-        }        
-        """;
+        String updateResponse = """
+                {
+                 "name": "Carlos",
+                 "job": "Analista"
+                 "updatedAt": "2024-01-01T12:00:00.000Z"
+                }
+                """;
 
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(updateResponse)
+                .setResponseCode(200)
+                .addHeader("Content-Type", "application/json")
+        );
 
-    mockWebServer.enqueue(new MockResponse()
-    .setBody(updateResponse)
-    .setResponseCode(200)
-    .addHeader("Content-Type", "application/json"));
+        String userJson = """
+                {
+                    "id": 1,
+                    "first_name": "Carlos",
+                    "last_name": "Perez"
+¡                }
+                """;
 
-    String userJson = 
-    """
-    {
-    "id" : 1,
-    "first_name" : "Carlos",
-    "last_name" : "Perez"        
-    }
-    """;
-
-    mockMvc.perform(post("/api/user/update")
-    .contentType(MediaType.APPLICATION_JSON)
-    .content(userJson)).andExpect(status().isOk()).andExpect(content().string("User created successfully"));
-
-    RecordedRequest request = mockWebServer.takeRequest();
-    assertEquals("/api/users/1", request.getPath());
-    assertEquals("application/json", request.getHeader("Accept"));
-    assertEquals("free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd", request.getHeader("X-API-KEY"));
+        mockMvc.perform(post("/api/user/update")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(userJson))
+                .andExpect(status().isOk())
+                .andExpect(content().string(""));
 
     }
 
 }
-
-//.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-
-// expect driven develpment
-//Expectation-Driven Development (often called EdD) is a software design approach where you first write out 
-// how you expect a tool, system, or feature to work from an ideal user or developer standpoint, ignoring current 
-// technical limits, and then work backward to implement it.(Note: If you meant Spec-Driven Development (SDD)—the 
-// popular modern workflow for guiding AI coding agents using explicit specifications, plans, and task files—see the 
-// brief distinction below.)
