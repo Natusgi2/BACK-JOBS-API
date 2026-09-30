@@ -41,72 +41,42 @@ class AssignEndToEndTest {
 
     private static MockWebServer mockWebServer;
 
+    // 12 usuarios simulados para cubrir todas las posiciones de jobs.json
     private static final String USER_PAGE_RESPONSE = """
             {
                 "page": 1,
-                "per_page": 6,
+                "per_page": 12,
                 "total": 12,
-                "total_pages": 2,
+                "total_pages": 1,
                 "data": [
-                    {
-                        "id": 1,
-                        "email": "george.bluth@reqres.in",
-                        "first_name": "George",
-                        "last_name": "Bluth",
-                        "avatar": "https://reqres.in/img/faces/1-image.jpg"
-                    },
-                    {
-                        "id": 2,
-                        "email": "janet.weaver@reqres.in",
-                        "first_name": "Janet",
-                        "last_name": "Weaver",
-                        "avatar": "https://reqres.in/img/faces/2-image.jpg"
-                    },
-                    {
-                        "id": 3,
-                        "email": "emma.wong@reqres.in",
-                        "first_name": "Emma",
-                        "last_name": "Wong",
-                        "avatar": "https://reqres.in/img/faces/3-image.jpg"
-                    }
+                    {"id": 1, "email": "user1@reqres.in", "first_name": "George", "last_name": "Bluth", "avatar": "https://reqres.in/img/faces/1-image.jpg"},
+                    {"id": 2, "email": "user2@reqres.in", "first_name": "Janet", "last_name": "Weaver", "avatar": "https://reqres.in/img/faces/2-image.jpg"},
+                    {"id": 3, "email": "user3@reqres.in", "first_name": "Emma", "last_name": "Wong", "avatar": "https://reqres.in/img/faces/3-image.jpg"},
+                    {"id": 4, "email": "user4@reqres.in", "first_name": "Eve", "last_name": "Holt", "avatar": "https://reqres.in/img/faces/4-image.jpg"},
+                    {"id": 5, "email": "user5@reqres.in", "first_name": "Charles", "last_name": "Morris", "avatar": "https://reqres.in/img/faces/5-image.jpg"},
+                    {"id": 6, "email": "user6@reqres.in", "first_name": "Tracey", "last_name": "Ramos", "avatar": "https://reqres.in/img/faces/6-image.jpg"},
+                    {"id": 7, "email": "user7@reqres.in", "first_name": "Michael", "last_name": "Lawson", "avatar": "https://reqres.in/img/faces/7-image.jpg"},
+                    {"id": 8, "email": "user8@reqres.in", "first_name": "Lindsay", "last_name": "Ferguson", "avatar": "https://reqres.in/img/faces/8-image.jpg"},
+                    {"id": 9, "email": "user9@reqres.in", "first_name": "Tobias", "last_name": "Funke", "avatar": "https://reqres.in/img/faces/9-image.jpg"},
+                    {"id": 10, "email": "user10@reqres.in", "first_name": "Byron", "last_name": "Fields", "avatar": "https://reqres.in/img/faces/10-image.jpg"},
+                    {"id": 11, "email": "user11@reqres.in", "first_name": "George", "last_name": "Edwards", "avatar": "https://reqres.in/img/faces/11-image.jpg"},
+                    {"id": 12, "email": "user12@reqres.in", "first_name": "Rachel", "last_name": "Howell", "avatar": "https://reqres.in/img/faces/12-image.jpg"}
                 ]
-            }
-            """;
-
-    private static final String SINGLE_USER_RESPONSE = """
-            {
-                "data": {
-                    "id": 1,
-                    "email": "george.bluth@reqres.in",
-                    "first_name": "George",
-                    "last_name": "Bluth",
-                    "avatar": "https://reqres.in/img/faces/1-image.jpg"
-                }
             }
             """;
 
     @BeforeAll
     static void setup() throws IOException {
         mockWebServer = new MockWebServer();
-        
-        // El Dispatcher responde a cualquier petición sin agotarse ni bloquearse jamás
         mockWebServer.setDispatcher(new Dispatcher() {
             @Override
             public MockResponse dispatch(RecordedRequest request) {
-                String path = request.getPath();
-                if (path != null && path.contains("/id/")) {
-                    return new MockResponse()
-                            .setResponseCode(200)
-                            .setHeader("Content-Type", "application/json")
-                            .setBody(SINGLE_USER_RESPONSE);
-                }
                 return new MockResponse()
                         .setResponseCode(200)
                         .setHeader("Content-Type", "application/json")
                         .setBody(USER_PAGE_RESPONSE);
             }
         });
-        
         mockWebServer.start();
     }
 
@@ -123,14 +93,11 @@ class AssignEndToEndTest {
             HttpClient httpClient = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(5))
                     .build();
-            // CORREGIDO: Usar la URL raíz sin /api/users duplicado
             String baseUrl = mockWebServer.url("/").toString();
-            // Quitar barra final si la tiene para evitar dobles barras //
             if (baseUrl.endsWith("/")) {
                 baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
             }
-            String apiKey = "test_key";
-            return new UserApiRepository(httpClient, objectMapper, baseUrl, apiKey);
+            return new UserApiRepository(httpClient, objectMapper, baseUrl, "test_key");
         }
     }
 
