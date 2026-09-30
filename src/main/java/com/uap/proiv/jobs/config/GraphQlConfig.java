@@ -1,5 +1,6 @@
 package com.uap.proiv.jobs.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.graphql.server.webmvc.GraphQlHttpHandler;
@@ -11,11 +12,10 @@ import org.springframework.web.servlet.function.ServerResponse;
 public class GraphQlConfig {
 
     @Bean
+    @ConditionalOnBean(GraphQlHttpHandler.class) // Evita que falle si el handler no está en el contexto
     public RouterFunction<ServerResponse> customGraphQlRouterFunction(GraphQlHttpHandler httpHandler) {
-        // Esto intercepta explícitamente la ruta /test y mapea el handler oficial de GraphQL
         return RouterFunctions.route()
                 .POST("/test", httpHandler::handleRequest)
                 .build();
     }
 }
-
